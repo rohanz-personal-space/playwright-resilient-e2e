@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Resilience Lab</title>
+  </head>
+  <body>
+    <main>
+      <h1>Inventory</h1>
+      <p data-test="status" role="status">Loading inventory…</p>
+      <ul data-test="inventory-list"></ul>
+      <button data-test="retry-button" type="button" hidden>Retry</button>
+    </main>
+
+    <script>
+      const status = document.querySelector('[data-test="status"]');
+      const list = document.querySelector('[data-test="inventory-list"]');
+      const retryButton = document.querySelector('[data-test="retry-button"]');
+
+      async function loadInventory() {
+        status.textContent = 'Loading inventory…';
+        list.replaceChildren();
+        retryButton.hidden = true;
+
+        try {
+          const response = await fetch('/api/inventory');
+          if (!response.ok) throw new Error(`Service unavailable (${response.status})`);
+
+          const inventory = await response.json();
+          if (!Array.isArray(inventory)) throw new Error('Unexpected inventory response');
+
+          for (const item of inventory) {
+            const row = document.createElement('li');
+            row.textContent = item.name;
+            list.append(row);
+          }
+          status.textContent = `${inventory.length} products available`;
+        } catch (error) {
+          status.textContent = error instanceof Error ? error.message : 'Unable to load inventory';
+          retryButton.hidden = false;
+        }
+      }
+
+      retryButton.addEventListener('click', loadInventory);
+      loadInventory();
+    </script>
+  </body>
+</html>
