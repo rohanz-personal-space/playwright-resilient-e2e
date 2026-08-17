@@ -1,8 +1,11 @@
 import { type Page } from '@playwright/test';
+import { BasePage } from '../core/BasePage.js';
 import { CREDENTIALS, ROUTES } from '../config/constants.js';
 
-export class LoginPage {
-  constructor(private readonly page: Page) {}
+export class LoginPage extends BasePage {
+  constructor(page: Page) {
+    super(page);
+  }
 
   private readonly usernameInput = () => this.page.getByPlaceholder('Username');
   private readonly passwordInput = () => this.page.getByPlaceholder('Password');

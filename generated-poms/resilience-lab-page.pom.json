@@ -1,0 +1,17 @@
+{
+  "schemaVersion": "1.0",
+  "generatedAt": "2026-08-17T00:00:00.000Z",
+  "url": "/",
+  "pageTitle": "Resilience Lab",
+  "pageClass": "ResilienceLabPage",
+  "generatedClass": "ResilienceLabPageGenerated",
+  "locatorPolicy": ["getByRole", "getByLabel", "getByTestId", "getByPlaceholder", "getByText", "cssId", "cssName"],
+  "discoveredElements": 4,
+  "actionableElements": 1,
+  "stateElements": 2,
+  "generatedLocators": 3,
+  "skipped": [],
+  "skippedState": [],
+  "components": [],
+  "strategies": { "getByRole": 1, "getByTestId": 2 }
+}

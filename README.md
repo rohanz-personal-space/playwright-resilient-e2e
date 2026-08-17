@@ -39,6 +39,8 @@ src/
   fixtures/index.ts         # Custom Playwright fixtures — auto-instantiates POMs per test
   utils/dataFactory.ts      # Faker-based random test data generation
   resilience/faultProfiles.ts  # Reusable deterministic network failure profiles
+  tools/pom-generator/         # Deterministic, non-AI POM generation utility
+  generated-poms/              # Example generated POM output
 
 tests/
   setup/auth.setup.ts       # Creates reusable authenticated browser state
@@ -52,6 +54,18 @@ test-app/                   # Local dependency target used for controlled fault 
 
 .github/workflows/ci.yml   # Typecheck and 3-shard Chromium matrix with merged report
 ```
+
+---
+
+## Deterministic POM generation
+
+The repository includes a non-AI POM generator that traverses a page with Playwright and generates a TypeScript Page Object using the repository's `data-test` convention and a deterministic locator priority. See [POM_GENERATOR.md](POM_GENERATOR.md) for the contract, usage, and limitations.
+
+```bash
+npm run pom:generate -- --url https://example.test/login --name LoginPage --output src/pages/generated/LoginPage.generated.ts
+```
+
+The generator is deliberately conservative: it does not guess business workflows or create fragile selectors when uniqueness cannot be established.
 
 ---
 
@@ -137,3 +151,16 @@ The local test-order API demonstrates a complete data lifecycle: a fixture creat
 **Types do not replace runtime contracts** — external JSON is parsed with Zod before tests use it, because TypeScript cannot validate data received over the network.
 
 **Fixtures own cleanup** — tests request data and never need to remember teardown logic; the fixture tracks and deletes every record it creates.
+
+## Strengthened enterprise POM architecture
+
+The framework now includes:
+
+- `src/core/BasePage.ts` with intentionally thin framework responsibilities.
+- `src/workflows/` for reusable business/domain operations outside the POM layer.
+- `src/components/` for reusable UI components using composition.
+- `POM_CONTRACT.md` defining the enterprise POM contract and deterministic locator policy.
+- An enhanced non-AI POM generator that produces Page Objects, component candidates, and a machine-readable `.pom.json` manifest.
+- Safe generated output using `.generated.ts` naming so manual POM code is not overwritten.
+
+The architecture is designed with a 50,000-test estate in mind: reuse, change isolation, safe regeneration, worker safety, and clear separation of test intent from UI mechanics.

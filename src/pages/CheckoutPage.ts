@@ -1,8 +1,11 @@
 import { type Page } from '@playwright/test';
+import { BasePage } from '../core/BasePage.js';
 import { ROUTES } from '../config/constants.js';
 
-export class CheckoutPage {
-  constructor(private readonly page: Page) {}
+export class CheckoutPage extends BasePage {
+  constructor(page: Page) {
+    super(page);
+  }
 
   private readonly firstNameInput = () => this.page.getByTestId('firstName');
   private readonly lastNameInput = () => this.page.getByTestId('lastName');

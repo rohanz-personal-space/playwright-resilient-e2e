@@ -3,12 +3,14 @@ import { LoginPage } from '../pages/LoginPage.js';
 import { InventoryPage } from '../pages/InventoryPage.js';
 import { CartPage } from '../pages/CartPage.js';
 import { CheckoutPage } from '../pages/CheckoutPage.js';
+import { AuthenticationWorkflow } from '../workflows/AuthenticationWorkflow.js';
 
 interface PageFixtures {
   loginPage: LoginPage;
   inventoryPage: InventoryPage;
   cartPage: CartPage;
   checkoutPage: CheckoutPage;
+  authenticationWorkflow: AuthenticationWorkflow;
 }
 
 export const test = withDiagnostics.extend<PageFixtures>({
@@ -23,6 +25,9 @@ export const test = withDiagnostics.extend<PageFixtures>({
   },
   checkoutPage: async ({ page }, use) => {
     await use(new CheckoutPage(page));
+  },
+  authenticationWorkflow: async ({ loginPage }, use) => {
+    await use(new AuthenticationWorkflow(loginPage));
   },
 });
 

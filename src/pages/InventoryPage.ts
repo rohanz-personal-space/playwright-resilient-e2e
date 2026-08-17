@@ -1,8 +1,11 @@
 import { type Page } from '@playwright/test';
+import { BasePage } from '../core/BasePage.js';
 import { ROUTES } from '../config/constants.js';
 
-export class InventoryPage {
-  constructor(private readonly page: Page) {}
+export class InventoryPage extends BasePage {
+  constructor(page: Page) {
+    super(page);
+  }
 
   private readonly pageTitle = () => this.page.getByTestId('title');
   private readonly inventoryItems = () => this.page.getByTestId('inventory-item');

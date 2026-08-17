@@ -1,8 +1,11 @@
 import { type Page } from '@playwright/test';
+import { BasePage } from '../core/BasePage.js';
 import { ROUTES } from '../config/constants.js';
 
-export class CartPage {
-  constructor(private readonly page: Page) {}
+export class CartPage extends BasePage {
+  constructor(page: Page) {
+    super(page);
+  }
 
   private readonly cartItems = () => this.page.locator('.cart_item');
   private readonly checkoutButton = () => this.page.getByRole('button', { name: 'Checkout' });

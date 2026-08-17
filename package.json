@@ -15,7 +15,12 @@
     "test:ui": "playwright test --ui",
     "test:headed": "playwright test --headed",
     "report": "playwright show-report",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "pom:generate": "node tools/pom-generator/pom-generator.mjs",
+    "pom:dry-run": "node tools/pom-generator/pom-generator.mjs --dry-run",
+    "pom:help": "node tools/pom-generator/pom-generator.mjs --help",
+    "lint:pom-contract": "node tools/lint/check-pom-contract.mjs",
+    "validate": "npm run typecheck && npm run lint:pom-contract"
   },
   "keywords": [
     "playwright",
