@@ -1,0 +1,97 @@
+name: Playwright Test Execution
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment'
+        required: true
+        type: choice
+        options:
+          - demo
+      browser:
+        description: 'Browser'
+        required: true
+        type: choice
+        options:
+          - chromium
+          - firefox
+          - webkit
+      suite:
+        description: 'Test Suite'
+        required: true
+        type: choice
+        options:
+          - smoke
+          - regression
+          - resilience
+      workers:
+        description: 'Workers'
+        required: false
+        default: '2'
+        type: string
+
+jobs:
+  validate:
+    name: POM Contract Validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate POM contract
+        run: npm run pom:contract
+
+      - name: Type check
+        run: npm run typecheck
+
+  playwright:
+    needs: validate
+    name: Playwright tests (${{ inputs.browser }} / ${{ inputs.suite }})
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browser dependencies
+        run: npx playwright install --with-deps ${{ inputs.browser }}
+
+      - name: Run Playwright tests
+        run: |
+          npx playwright test \
+            --project=${{ inputs.browser }} \
+            --grep="@${{ inputs.suite }}" \
+            --workers=${{ inputs.workers }}
+        env:
+          CI: true
+          BASE_URL: https://www.saucedemo.com
+          API_BASE_URL: https://jsonplaceholder.typicode.com
+          RESILIENCE_BASE_URL: http://127.0.0.1:4173
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-${{ inputs.browser }}-${{ inputs.suite }}
+          path: playwright-report/
+          if-no-files-found: ignore
+          retention-days: 14

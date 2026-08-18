@@ -19,6 +19,7 @@
     "pom:generate": "node tools/pom-generator/pom-generator.mjs",
     "pom:dry-run": "node tools/pom-generator/pom-generator.mjs --dry-run",
     "pom:help": "node tools/pom-generator/pom-generator.mjs --help",
+    "pom:contract": "npm run lint:pom-contract",
     "lint:pom-contract": "node tools/lint/check-pom-contract.mjs",
     "validate": "npm run typecheck && npm run lint:pom-contract"
   },
