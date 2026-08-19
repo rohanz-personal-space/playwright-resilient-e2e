@@ -9,7 +9,7 @@ const environmentSchema = z.object({
   testIdPrefix: z.string().default('AUTO'),
 });
 
-export const environment = environmentSchema.parse({
+export const environments = environmentSchema.parse({
   target: process.env.TEST_TARGET ?? 'demo',
   baseURL: process.env.BASE_URL ?? 'https://www.saucedemo.com',
   apiBaseURL: process.env.API_BASE_URL ?? 'https://jsonplaceholder.typicode.com',

@@ -1,7 +1,7 @@
 {
   "name": "playwright-resilient-e2e",
   "version": "1.0.0",
-  "description": "A production-grade Playwright TypeScript framework for reliable E2E testing and failure diagnostics.",
+  "description": "A Playwright TypeScript framework for reliable E2E testing and failure diagnostics.",
   "type": "module",
   "scripts": {
     "test": "playwright test",
@@ -14,14 +14,20 @@
     "test:update-snapshots": "playwright test tests/visual --project=chromium --update-snapshots",
     "test:ui": "playwright test --ui",
     "test:headed": "playwright test --headed",
+    "test:enterprise": "playwright test tests/enterprise --project=chromium",
     "report": "playwright show-report",
     "typecheck": "tsc --noEmit",
+    "lint": "eslint . --ext .ts,.js",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "pom:generate": "node tools/pom-generator/pom-generator.mjs",
     "pom:dry-run": "node tools/pom-generator/pom-generator.mjs --dry-run",
     "pom:help": "node tools/pom-generator/pom-generator.mjs --help",
     "pom:contract": "npm run lint:pom-contract",
     "lint:pom-contract": "node tools/lint/check-pom-contract.mjs",
-    "validate": "npm run typecheck && npm run lint:pom-contract"
+    "validate": "npm run typecheck && npm run lint && npm run format:check && npm run lint:pom-contract",
+    "prepare": "husky install",
+    "audit": "npm audit --audit-level=moderate"
   },
   "keywords": [
     "playwright",
@@ -39,7 +45,21 @@
     "@faker-js/faker": "^9.3.0",
     "@playwright/test": "^1.49.1",
     "@types/node": "^22.10.2",
+    "@typescript-eslint/eslint-plugin": "^8.17.0",
+    "@typescript-eslint/parser": "^8.17.0",
+    "eslint": "^9.23.0",
+    "eslint-config-prettier": "^10.0.0",
+    "eslint-plugin-playwright": "^1.0.0",
+    "husky": "^9.0.0",
+    "lint-staged": "^15.0.0",
+    "prettier": "^3.4.0",
     "typescript": "^5.7.2",
     "zod": "^4.4.3"
+  },
+  "lint-staged": {
+    "*.{ts,js,json,md}": [
+      "prettier --write",
+      "eslint --fix"
+    ]
   }
 }

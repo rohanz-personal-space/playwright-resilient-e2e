@@ -8,7 +8,10 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 2 : undefined,
   reporter: process.env.CI
-    ? [['blob']]
+    ? [
+        ['blob'],
+        ['github'],
+      ]
     : [
         ['html', { open: 'never' }],
         ['list'],
@@ -57,6 +60,16 @@ export default defineConfig({
     {
       name: 'webkit',
       use: { ...devices['Desktop Safari'] },
+      testIgnore: ['**/setup/**', '**/authenticated/**'],
+    },
+    {
+      name: 'mobile-chrome',
+      use: { ...devices['Pixel 5'] },
+      testIgnore: ['**/setup/**', '**/authenticated/**'],
+    },
+    {
+      name: 'tablet-webkit',
+      use: { ...devices['iPad (gen 7)'] },
       testIgnore: ['**/setup/**', '**/authenticated/**'],
     },
   ],

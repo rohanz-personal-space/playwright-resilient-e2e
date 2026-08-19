@@ -1,4 +1,4 @@
-name: CI
+name: CI Pipeline
 
 on:
   push:
@@ -6,32 +6,79 @@ on:
   pull_request:
     branches: [main]
   schedule:
-    - cron: '0 2 * * 1-5'  # Nightly Mon–Fri at 02:00 UTC
+    - cron: '0 2 * * 1-5'
+  workflow_dispatch:
+    inputs:
+      browser:
+        description: 'Browser override for manual CI runs'
+        required: false
+        default: 'chromium'
+        type: choice
+        options:
+          - chromium
+          - firefox
+          - webkit
+      suite:
+        description: 'Suite override for manual CI runs'
+        required: false
+        default: 'smoke'
+        type: choice
+        options:
+          - smoke
+          - regression
 
 jobs:
-  smoke:
-    name: Smoke Gate
-    if: github.event_name == 'pull_request'
+  validate:
+    name: Validate framework contracts
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Typecheck
+      - name: Type check
         run: npm run typecheck
 
+      - name: Validate POM contract
+        run: npm run pom:contract
+
+  smoke:
+    name: Smoke (${{ matrix.browser }})
+    needs: validate
+    if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch' && inputs.suite == 'smoke' || github.event_name == 'push'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
       - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install --with-deps ${{ matrix.browser }}
 
       - name: Run smoke tests
-        run: npx playwright test --project=chromium --grep @smoke
+        run: npx playwright test --project=${{ matrix.browser }} --grep @smoke
         env:
           CI: true
 
@@ -39,38 +86,40 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: smoke-report
+          name: smoke-report-${{ matrix.browser }}
           path: playwright-report/
+          if-no-files-found: ignore
           retention-days: 7
 
   regression:
-    name: Regression (${{ matrix.shard }})
-    if: github.event_name == 'push' || github.event_name == 'schedule'
+    name: Regression (${{ matrix.browser }} / shard ${{ matrix.shard }})
+    needs: validate
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch' && inputs.suite == 'regression' || github.event_name == 'schedule'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        shard: [1/3, 2/3, 3/3]
+        browser: [chromium, firefox, webkit]
+        shard: [1, 2, 3]
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Typecheck
-        run: npm run typecheck
+      - name: Install Playwright browser dependencies
+        run: npx playwright install --with-deps ${{ matrix.browser }}
 
-      - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium
-
-      - name: Run tests (shard ${{ matrix.shard }})
-        run: npx playwright test --project=chromium --project=authenticated-chromium --shard=${{ matrix.shard }}
+      - name: Run regression tests
+        run: npx playwright test --project=${{ matrix.browser }} --grep @regression --shard=${{ matrix.shard }}/3
         env:
           CI: true
 
@@ -78,20 +127,25 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: blob-report-${{ strategy.job-index }}
+          name: blob-report-${{ matrix.browser }}-${{ matrix.shard }}
           path: blob-report/
+          if-no-files-found: ignore
           retention-days: 7
 
   merge-reports:
+    name: Merge regression reports
     needs: regression
-    if: always() && (github.event_name == 'push' || github.event_name == 'schedule')
+    if: always() && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'schedule')
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
 
       - name: Install dependencies
@@ -104,7 +158,7 @@ jobs:
           merge-multiple: true
           path: all-blob-reports
 
-      - name: Merge reports
+      - name: Merge Playwright reports
         run: npx playwright merge-reports --reporter html ./all-blob-reports
 
       - name: Upload HTML report
@@ -112,4 +166,5 @@ jobs:
         with:
           name: playwright-report
           path: playwright-report/
+          if-no-files-found: ignore
           retention-days: 30

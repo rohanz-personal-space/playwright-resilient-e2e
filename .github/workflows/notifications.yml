@@ -1,0 +1,17 @@
+name: Test notifications
+
+on:
+  workflow_run:
+    workflows: ["CI Pipeline", "Quality gates"]
+    types: [completed]
+
+jobs:
+  notify:
+    if: ${{ github.event.workflow_run.conclusion == 'failure' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Notify on failure
+        run: |
+          echo "A workflow failed in the Playwright test framework."
+          echo "Repository: ${{ github.repository }}"
+          echo "Workflow run: ${{ github.event.workflow_run.html_url }}"
