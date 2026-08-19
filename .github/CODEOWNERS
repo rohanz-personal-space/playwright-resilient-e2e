@@ -1,0 +1,6 @@
+* @rpandit
+
+# Prioritize platform and framework ownership
+src/** @rpandit
+/tests/** @rpandit
+/.github/** @rpandit
